@@ -1,15 +1,14 @@
-import ipdb
 import logging
 import os
 import cloudstorage as gcs
-# import webapp2
 from PIL import Image
 from pytesseract import image_to_string
 from google.cloud import storage
-# from google.appengine.api import app_identity
 import requests
 import tweepy
 import random
+from dotenv import load_dotenv
+load_dotenv()
 
 
 def get(self):
@@ -23,10 +22,10 @@ def get(self):
 
 
 twitter_auth_keys = {
-    "consumer_key": "1paOaozM1IF6s6iMYvIa7NLFH",
-    "consumer_secret": "Xj4qnRaaWmGuoXidtgyzCsC7MkqgrIOv838UzfVl5H8qTPBea2",
-    "access_token": "1321565465970462720-1YRH2u9iA1xdRJiEVQ7GtG9vn8AJp1",
-    "access_token_secret": "LsGKdEeqOT6Oul1FsLrTQNBaNfE26ULlERPcYCG10PoGr"
+    "consumer_key": os.getenv("TWITTER_CONSUMER_KEY"),
+    "consumer_secret": os.getenv("TWITTER_CONSUMER_SECRET"),
+    "access_token": os.getenv("TWITTER_ACCESS_TOKEN"),
+    "access_token_secret": os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
 }
 
 auth = tweepy.OAuthHandler(
@@ -39,16 +38,14 @@ auth.set_access_token(
 )
 api = tweepy.API(auth)
 
-bucket_name = "lynchstenders"
+bucket_name = os.getenv("BUCKET_NAME")
 
-storage_client = storage.Client()
+storage_client = storage.Client().from_service_account_json(
+    os.getenv("SERVICE_JSON_PATH"))
 
 blobs = storage_client.list_blobs(bucket_name)
 
 random_blob = random.choice(list(blobs))
-
-url_lifetime = 3600
-serving_url = random_blob.generate_signed_url(url_lifetime)
 
 url_lifetime = 3600
 serving_url = random_blob.generate_signed_url(url_lifetime)
